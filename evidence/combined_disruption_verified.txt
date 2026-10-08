@@ -1,0 +1,25 @@
+Intelligent Air Traffic Management System — V5
+CASE: Combined Disruption
+Open runway(s): R1 | Closed runway(s): R2 | Blocked waypoint: WP1
+Flight: AI222 | Fuel: critical | Inferred priority: emergency (weight 10)
+Baseline route: NORTH -> WP1 -> HOLD_A -> AIRPORT
+Baseline route cost: 12.5
+Disrupted route: NORTH -> WP2 -> HOLD_B -> AIRPORT
+Disrupted route cost: 22.5
+Route-induced delay: 4 min | Planned ETA: 10:09 | Effective ETA: 10:13
+
+OPTIMAL RUNWAY SCHEDULE (one optimal order)
+Flight   Effective   Scheduled   CSP delay   Penalty
+6E204    10:03       10:03       0           0
+UK315    10:05       10:08       3           3
+AI222    10:13       10:13       0           0
+SG410    10:07       10:17       10          10
+QP113    10:14       10:20       6           6
+AI101    10:04       10:24       20          20
+6E880    10:11       10:28       17          17
+EK502    10:12       10:33       21          21
+
+Priority-weighted scheduler score: 77
+AI222 assigned R1 at 10:13, with 0 min scheduler delay and 4 min total delay
+Exact single-runway permutation check: 40,320 orderings; minimum score 77
+ALL CHECKS PASSED

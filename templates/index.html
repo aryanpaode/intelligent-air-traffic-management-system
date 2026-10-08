@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligent Air Traffic Management System — V5</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">CLASSICAL AI MINI PROJECT • VERSION 5</p>
+      <h1>Intelligent Air Traffic Management System</h1>
+      <p class="subtitle">
+        Search • Constraint Optimization • Forward Chaining • Explainable Expert-System Reasoning
+      </p>
+    </div>
+    <div class="status-pill">ACADEMIC SIMULATION</div>
+  </header>
+
+  <main>
+    <section class="panel scenario-panel">
+      <div class="panel-head">
+        <div>
+          <h2>1. Scenario Control</h2>
+          <p>Load baseline, disruption and algorithm-comparison test cases.</p>
+        </div>
+      </div>
+      <div class="button-row">
+        <button onclick="loadScenario('normal')">Normal Traffic</button>
+        <button onclick="loadScenario('runway_closure')">Runway Closure</button>
+        <button onclick="loadScenario('emergency')">Emergency Aircraft</button>
+        <button onclick="loadScenario('weather')">Severe Weather</button>
+        <button class="danger" onclick="loadScenario('combined')">Combined Disruption</button>
+        <button class="contrast" onclick="loadScenario('search_contrast')">Search Contrast</button>
+      </div>
+      <p id="scenarioLabel" class="info-line"></p>
+    </section>
+
+    <div class="grid two">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>2. Runways</h2>
+            <p>Runway availability becomes a CSP domain constraint.</p>
+          </div>
+        </div>
+        <div id="runwayCards" class="runway-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>3. Weather / Airspace</h2>
+            <p>Blocked waypoints trigger A* replanning and can alter effective ETA.</p>
+          </div>
+        </div>
+        <div class="inline-form">
+          <select id="weatherNode"></select>
+          <button onclick="setWeather(true)">Block Waypoint</button>
+          <button class="secondary" onclick="setWeather(false)">Reopen</button>
+        </div>
+        <p id="blockedNodes" class="info-line"></p>
+      </section>
+    </div>
+
+    <section class="panel radar-panel">
+      <div class="panel-head radar-head">
+        <div>
+          <h2>4. Interactive Airspace Radar</h2>
+          <p>Traffic, risk, runway state and the currently selected search route.</p>
+        </div>
+        <div class="radar-legend">
+          <span><i class="legend-dot normal-dot"></i> Normal</span>
+          <span><i class="legend-dot high-dot"></i> High</span>
+          <span><i class="legend-dot emergency-dot"></i> Emergency</span>
+          <span><i class="legend-dot blocked-dot"></i> Blocked</span>
+        </div>
+      </div>
+      <div class="radar-shell">
+        <svg id="radarSvg" viewBox="0 0 1000 520" role="img" aria-label="Simulated airspace radar"></svg>
+        <div class="radar-readout">
+          <span id="radarScenario">SCENARIO: NORMAL</span>
+          <span id="radarRouteLabel">DISPLAYED ROUTE: NONE</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>5. Active Flights, Inference & Route-Aware ETA</h2>
+          <p>Forward chaining sets priority; A* route cost can shift the ETA used by the scheduler.</p>
+        </div>
+      </div>
+      <div class="integration-note">
+        <strong>V5 integration:</strong>
+        Planned ETA → A* route assessment → Effective ETA → CSP optimization.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Flight</th>
+              <th>Operation</th>
+              <th>Planned ETA</th>
+              <th>Route Δ</th>
+              <th>Effective ETA</th>
+              <th>Aircraft</th>
+              <th>Fuel</th>
+              <th>Priority</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="flightTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>6. Add Flight</h2>
+          <p>Add another CSP variable and radar contact.</p>
+        </div>
+      </div>
+      <div class="form-grid">
+        <input id="newFlightId" placeholder="Flight ID e.g. AI909">
+        <select id="newOperation">
+          <option value="arrival">Arrival</option>
+          <option value="departure">Departure</option>
+        </select>
+        <input id="newEta" type="number" min="0" value="15" placeholder="ETA minute from 10:00">
+        <select id="newType">
+          <option value="light">Light</option>
+          <option value="medium" selected>Medium</option>
+          <option value="heavy">Heavy</option>
+        </select>
+        <select id="newFuel">
+          <option value="normal">Normal fuel</option>
+          <option value="low">Low fuel</option>
+          <option value="critical">Critical fuel</option>
+        </select>
+        <select id="newSource"></select>
+        <button onclick="addFlight()">Add Flight</button>
+      </div>
+    </section>
+
+    <section class="panel accent">
+      <div class="panel-head">
+        <div>
+          <h2>7. Priority-Weighted CSP Optimizer</h2>
+          <p>
+            Objective-bounded branch-and-bound + MRV + forward checking. No fixed scheduling horizon.
+          </p>
+        </div>
+        <div class="button-row compact-buttons">
+          <button class="secondary" onclick="compareCspStrategies()">Compare CSP Strategies</button>
+          <button class="primary" onclick="runScheduler()">RUN OPTIMIZER</button>
+        </div>
+      </div>
+
+      <div class="objective-strip">
+        <span>Optimizer objective: CSP delay after route-aware ETA</span>
+        <strong>Normal ×1</strong>
+        <strong>High ×3</strong>
+        <strong>Emergency ×10</strong>
+      </div>
+      <p class="validation-note">V5 removes the fixed scheduling horizon. In one-runway scenarios with up to 8 flights, an independent exhaustive n! validator cross-checks the optimizer result.</p>
+
+      <div id="scheduleSummary" class="metrics"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Flight</th>
+              <th>Priority</th>
+              <th>Planned ETA</th>
+              <th>Route Δ</th>
+              <th>Effective ETA</th>
+              <th>Runway</th>
+              <th>Slot</th>
+              <th>CSP Delay</th>
+              <th>Total Δ</th>
+              <th>Weighted CSP</th>
+              <th>Trace</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTable"></tbody>
+        </table>
+      </div>
+
+      <div id="cspCompareWrap" class="comparison-wrap hidden">
+        <div class="subhead">
+          <h3>CSP Strategy Comparison</h3>
+          <p>Heuristic stress test using the original 20-minute comparison window. This table is separate from the exact optimizer above.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Strategy</th>
+                <th>Solved</th>
+                <th>Candidate Assignments</th>
+                <th>Constraint Checks</th>
+                <th>Backtracks</th>
+                <th>Forward Checks</th>
+                <th>Runtime (ms)</th>
+              </tr>
+            </thead>
+            <tbody id="cspCompareTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="rationale-details">
+        <summary>Compact decision rationale cards</summary>
+        <div id="explanationBox" class="explanations"></div>
+      </details>
+    </section>
+
+    <section class="panel trace-panel" id="decisionTracePanel">
+      <div class="panel-head trace-head">
+        <div>
+          <h2>8. Explainable AI Decision Trace</h2>
+          <p>Follow one flight from observed facts through inference, A* routing, CSP constraints and the final optimized assignment.</p>
+        </div>
+        <div class="inline-form trace-picker">
+          <label for="traceFlightSelect">Flight</label>
+          <select id="traceFlightSelect" onchange="renderSelectedDecisionTrace()"></select>
+        </div>
+      </div>
+
+      <div class="trace-pipeline" aria-label="Decision pipeline">
+        <span>Facts</span><b>→</b><span>Forward Chaining</span><b>→</b><span>A*</span><b>→</b><span>CSP</span><b>→</b><span>Optimization</span><b>→</b><span>Decision</span>
+      </div>
+      <div id="traceSummary" class="trace-summary">Run the optimizer to generate an end-to-end decision trace.</div>
+      <div id="decisionTrace" class="trace-grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>9. Route Search Laboratory</h2>
+          <p>Compare BFS, UCS, Greedy Best-First and A*. Display any result on the radar.</p>
+        </div>
+      </div>
+
+      <div class="inline-form">
+        <label>Start</label>
+        <select id="routeStart"></select>
+        <label>Goal</label>
+        <select id="routeGoal"></select>
+        <button onclick="compareRoutes()">Compare Algorithms</button>
+      </div>
+
+      <div id="routeInsight" class="route-insight"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Path</th>
+              <th>Total Cost</th>
+              <th>Nodes Explored</th>
+              <th>Runtime (ms)</th>
+              <th>Radar</th>
+            </tr>
+          </thead>
+          <tbody id="routeTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>10. Event Log</h2>
+          <p>Tracks scenario changes, inference-relevant events and solver runs.</p>
+        </div>
+      </div>
+      <div id="eventLog" class="log"></div>
+    </section>
+
+    <section class="notice">
+      Academic simulation only. Routing, separation, priority and delay conversion rules are intentionally simplified
+      and must not be used for real-world aviation decisions.
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
